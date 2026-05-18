@@ -264,8 +264,13 @@ with left:
         margin={"r":0,"t":0,"l":0,"b":0},
         paper_bgcolor="#FFFFFF",
         plot_bgcolor="#FFFFFF",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                    xanchor="right", x=1)
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.02,
+            xanchor="right", x=1,
+            font=dict(color="#0F172A", size=11),
+            bgcolor="#FFFFFF",
+            bordercolor="#E2E8F0",
+        )
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
@@ -287,7 +292,22 @@ with right:
         xaxis_tickangle=-30,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
-        font=dict(color="#0F172A"),
+        font=dict(color="#0F172A", size=11),
+        xaxis=dict(
+            tickfont=dict(color="#0F172A", size=10),
+            title_font=dict(color="#0F172A"),
+            gridcolor="#E2E8F0",
+        ),
+        yaxis=dict(
+            tickfont=dict(color="#0F172A", size=10),
+            title_font=dict(color="#0F172A"),
+            gridcolor="#E2E8F0",
+        ),
+        legend=dict(
+            font=dict(color="#0F172A", size=10),
+            bgcolor="#FFFFFF",
+            bordercolor="#E2E8F0",
+        ),
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -306,9 +326,13 @@ with right:
         height=200,
         margin={"r":0,"t":10,"l":0,"b":0},
         showlegend=True,
-        legend=dict(orientation="h", y=-0.1),
+        legend=dict(
+            orientation="h", y=-0.1,
+            font=dict(color="#0F172A", size=10),
+            bgcolor="#FFFFFF",
+        ),
         paper_bgcolor="#FFFFFF",
-        font=dict(color="#0F172A"),
+        font=dict(color="#0F172A", size=11),
     )
     st.plotly_chart(fig_donut, use_container_width=True)
 
