@@ -15,41 +15,101 @@ st.set_page_config(
     layout="wide",
 )
 
-# ── Custom CSS ───────────────────────────────────────────────
+# ── Force white light theme ──────────────────────────────────
 st.markdown("""
 <style>
-    .main { background-color: #FAFAFA; }
-    .metric-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        text-align: center;
+    /* Force white background everywhere */
+    html, body, [data-testid="stAppViewContainer"],
+    [data-testid="stApp"], .main, .block-container {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
     }
-    .metric-value {
-        font-size: 2rem;
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #F8FAFC !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #0F172A !important;
+    }
+
+    /* Metric cards */
+    [data-testid="stMetric"] {
+        background-color: #F8FAFC;
+        border-radius: 10px;
+        padding: 16px;
+        border: 1px solid #E2E8F0;
+    }
+    [data-testid="stMetricValue"] {
+        color: #1E3A5F !important;
         font-weight: 700;
-        color: #1E3A5F;
     }
-    .metric-label {
-        font-size: 0.85rem;
-        color: #64748B;
-        margin-top: 4px;
+    [data-testid="stMetricLabel"] {
+        color: #64748B !important;
     }
-    .verified-badge {
-        background: #ECFDF5;
-        color: #065F46;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
+
+    /* Dataframe */
+    [data-testid="stDataFrame"] {
+        background-color: #FFFFFF !important;
     }
-    .unverified-badge {
-        background: #F1F5F9;
-        color: #475569;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
+
+    /* Buttons */
+    .stButton > button {
+        background-color: #1E3A5F !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+    }
+    .stButton > button:hover {
+        background-color: #2563EB !important;
+    }
+
+    /* Download button */
+    .stDownloadButton > button {
+        background-color: #059669 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+    }
+
+    /* Selectbox and inputs */
+    .stSelectbox, .stMultiSelect, .stSlider {
+        color: #0F172A !important;
+    }
+
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1E3A5F !important;
+    }
+
+    /* Divider */
+    hr {
+        border-color: #E2E8F0 !important;
+    }
+
+    /* Text area */
+    textarea {
+        background-color: #F8FAFC !important;
+        color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+    }
+
+    /* Success message */
+    .stSuccess {
+        background-color: #ECFDF5 !important;
+        color: #065F46 !important;
+    }
+
+    /* Spinner */
+    .stSpinner {
+        color: #1E3A5F !important;
+    }
+
+    /* Remove default padding */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -78,7 +138,6 @@ with st.spinner("Loading property data and running cross-verification..."):
 
 # ── Top metrics ──────────────────────────────────────────────
 col1, col2, col3, col4, col5 = st.columns(5)
-
 with col1:
     st.metric("Total Properties", f"{len(df):,}")
 with col2:
@@ -93,17 +152,11 @@ with col5:
 st.divider()
 
 # ── Sidebar filters ──────────────────────────────────────────
-st.sidebar.image(
-    "https://img.icons8.com/fluency/96/home.png",
-    width=60
-)
-st.sidebar.title("Filters")
+st.sidebar.markdown("## 🔍 Filters")
 
-# Market filter
 markets = ["All Markets"] + sorted(df["market"].unique().tolist())
 selected_market = st.sidebar.selectbox("Market", markets)
 
-# Tier filter
 tiers = st.sidebar.multiselect(
     "Lead Tier",
     options=["A", "B", "C"],
@@ -115,13 +168,11 @@ tiers = st.sidebar.multiselect(
     }[x]
 )
 
-# Airbnb verified filter
 verified_filter = st.sidebar.radio(
     "Airbnb Verification",
     options=["All", "Verified Only", "Unverified Only"],
 )
 
-# Price range
 min_val = int(df["property_value"].min())
 max_val = int(df["property_value"].max())
 price_range = st.sidebar.slider(
@@ -134,18 +185,14 @@ price_range = st.sidebar.slider(
 
 # ── Apply filters ────────────────────────────────────────────
 filtered = df.copy()
-
 if selected_market != "All Markets":
     filtered = filtered[filtered["market"] == selected_market]
-
 if tiers:
     filtered = filtered[filtered["tier"].isin(tiers)]
-
 if verified_filter == "Verified Only":
     filtered = filtered[filtered["airbnb_verified"] == True]
 elif verified_filter == "Unverified Only":
     filtered = filtered[filtered["airbnb_verified"] == False]
-
 filtered = filtered[
     (filtered["property_value"] >= price_range[0]) &
     (filtered["property_value"] <= price_range[1])
@@ -153,108 +200,87 @@ filtered = filtered[
 
 st.markdown(f"### Showing {len(filtered):,} properties")
 
-# ── Two column layout ────────────────────────────────────────
+# ── Map + Charts ─────────────────────────────────────────────
 left, right = st.columns([1.2, 1])
 
-# ── Left — Map ───────────────────────────────────────────────
 with left:
     st.markdown("#### 📍 Property Map")
-
-    map_df = filtered.dropna(subset=["latitude", "longitude"]).copy()
+    map_df = filtered.dropna(subset=["latitude","longitude"]).copy()
     map_df["verified_label"] = map_df["airbnb_verified"].map(
         {True: "✅ Airbnb Verified", False: "🔍 Potential Second Home"}
     )
     map_df["value_fmt"] = map_df["property_value"].apply(
         lambda x: f"${x:,.0f}"
     )
-
     color_map = {
-        "✅ Airbnb Verified":        "#059669",
-        "🔍 Potential Second Home":  "#2563EB",
+        "✅ Airbnb Verified":       "#059669",
+        "🔍 Potential Second Home": "#2563EB",
     }
-
     fig_map = px.scatter_mapbox(
         map_df,
-        lat="latitude",
-        lon="longitude",
+        lat="latitude", lon="longitude",
         color="verified_label",
         color_discrete_map=color_map,
-        size="score",
-        size_max=14,
+        size="score", size_max=14,
         hover_name="address",
         hover_data={
-            "market":        True,
-            "value_fmt":     True,
-            "score":         True,
-            "tier_label":    True,
-            "latitude":      False,
-            "longitude":     False,
-            "verified_label":False,
+            "market": True, "value_fmt": True,
+            "score": True, "tier_label": True,
+            "latitude": False, "longitude": False,
+            "verified_label": False,
         },
-        zoom=4,
-        height=450,
+        zoom=4, height=450,
         mapbox_style="carto-positron",
     )
     fig_map.update_layout(
         margin={"r":0,"t":0,"l":0,"b":0},
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        )
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#FFFFFF",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                    xanchor="right", x=1)
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
-# ── Right — Charts ───────────────────────────────────────────
 with right:
     st.markdown("#### 📊 Market Breakdown")
-
     market_counts = (
-        filtered.groupby(["market", "tier"])
-        .size()
-        .reset_index(name="count")
+        filtered.groupby(["market","tier"])
+        .size().reset_index(name="count")
     )
-
-    tier_colors = {"A": "#059669", "B": "#D97706", "C": "#DC2626"}
-
+    tier_colors = {"A":"#059669","B":"#D97706","C":"#DC2626"}
     fig_bar = px.bar(
-        market_counts,
-        x="market",
-        y="count",
-        color="tier",
-        color_discrete_map=tier_colors,
-        labels={"market": "", "count": "Properties", "tier": "Tier"},
+        market_counts, x="market", y="count",
+        color="tier", color_discrete_map=tier_colors,
+        labels={"market":"","count":"Properties","tier":"Tier"},
         height=220,
     )
     fig_bar.update_layout(
         margin={"r":0,"t":10,"l":0,"b":0},
-        legend_title="Tier",
         xaxis_tickangle=-30,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor="#FFFFFF",
+        paper_bgcolor="#FFFFFF",
+        font=dict(color="#0F172A"),
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    # Verified vs unverified donut
     st.markdown("#### ✅ Verification Status")
     verified_counts = filtered["airbnb_verified"].value_counts()
     fig_donut = go.Figure(data=[go.Pie(
-        labels=["Airbnb Verified", "Potential Second Home"],
+        labels=["Airbnb Verified","Potential Second Home"],
         values=[
             verified_counts.get(True, 0),
             verified_counts.get(False, 0)
         ],
         hole=0.55,
-        marker_colors=["#059669", "#2563EB"],
+        marker_colors=["#059669","#2563EB"],
     )])
     fig_donut.update_layout(
         height=200,
         margin={"r":0,"t":10,"l":0,"b":0},
         showlegend=True,
         legend=dict(orientation="h", y=-0.1),
-        paper_bgcolor="white",
+        paper_bgcolor="#FFFFFF",
+        font=dict(color="#0F172A"),
     )
     st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -264,34 +290,26 @@ st.divider()
 st.markdown("### 🏆 Ranked Lead List")
 
 display_cols = [
-    "rank", "owner_name", "address", "market",
-    "property_value", "score", "tier_label", "airbnb_verified",
-    "email", "phone"
+    "rank","owner_name","address","market",
+    "property_value","score","tier_label",
+    "airbnb_verified","email","phone"
 ]
 display_df = filtered[
     [c for c in display_cols if c in filtered.columns]
 ].copy()
-
 display_df["property_value"] = display_df["property_value"].apply(
     lambda x: f"${x:,.0f}"
 )
 display_df["score"] = display_df["score"].apply(lambda x: f"{x:.3f}")
 display_df["airbnb_verified"] = display_df["airbnb_verified"].map(
-    {True: "✅ Yes", False: "🔍 No"}
+    {True:"✅ Yes", False:"🔍 No"}
 )
 display_df.columns = [
-    c.replace("_", " ").title()
-    for c in display_df.columns
+    c.replace("_"," ").title() for c in display_df.columns
 ]
+st.dataframe(display_df, use_container_width=True,
+             height=400, hide_index=True)
 
-st.dataframe(
-    display_df,
-    use_container_width=True,
-    height=400,
-    hide_index=True,
-)
-
-# Download button
 csv = filtered.to_csv(index=False)
 st.download_button(
     label="⬇️ Download Full Lead List as CSV",
@@ -302,7 +320,7 @@ st.download_button(
 
 st.divider()
 
-# ── Outreach message generator ───────────────────────────────
+# ── Outreach generator ───────────────────────────────────────
 st.markdown("### ✉️ AI Outreach Message Generator")
 st.markdown(
     "Select a property to generate a personalized outreach "
@@ -317,26 +335,27 @@ else:
         f"#{row['rank']} — {row['address']} | "
         f"{row['market']} | ${row['property_value']:,.0f}"
         for _, row in top_leads.iterrows()
-        if pd.notna(row.get("address")) and str(row.get("address")) != "nan"
+        if pd.notna(row.get("address")) and
+        str(row.get("address")) != "nan"
     ]
-
     if options:
         selected = st.selectbox("Select a property", options)
         selected_rank = int(selected.split("#")[1].split("—")[0].strip())
-        selected_row  = filtered[filtered["rank"] == selected_rank].iloc[0]
+        selected_row  = filtered[
+            filtered["rank"] == selected_rank
+        ].iloc[0]
 
-        col_a, col_b = st.columns([1, 1])
-
+        col_a, col_b = st.columns([1,1])
         with col_a:
             st.markdown("**Property Details**")
-            st.write(f"📍 **Address:** {selected_row.get('address', 'N/A')}")
-            st.write(f"🏙️ **Market:** {selected_row.get('market', 'N/A')}")
-            st.write(f"💰 **Value:** ${selected_row.get('property_value', 0):,.0f}")
-            st.write(f"🎯 **Score:** {selected_row.get('score', 0):.3f}")
+            st.write(f"📍 **Address:** {selected_row.get('address','N/A')}")
+            st.write(f"🏙️ **Market:** {selected_row.get('market','N/A')}")
+            st.write(f"💰 **Value:** ${selected_row.get('property_value',0):,.0f}")
+            st.write(f"🎯 **Score:** {selected_row.get('score',0):.3f}")
             st.write(f"✅ **Airbnb Verified:** "
                      f"{'Yes' if selected_row.get('airbnb_verified') else 'No'}")
-            st.write(f"📧 **Email:** {selected_row.get('email', 'N/A')}")
-            st.write(f"📞 **Phone:** {selected_row.get('phone', 'N/A')}")
+            st.write(f"📧 **Email:** {selected_row.get('email','N/A')}")
+            st.write(f"📞 **Phone:** {selected_row.get('phone','N/A')}")
 
         with col_b:
             st.markdown("**AI Generated Outreach Message**")
@@ -350,8 +369,6 @@ else:
                     label_visibility="collapsed"
                 )
                 st.success("Message ready to send!")
-    else:
-        st.info("No properties with addresses available in current filters.")
 
 st.divider()
 
