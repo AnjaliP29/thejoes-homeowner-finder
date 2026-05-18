@@ -101,6 +101,34 @@ st.markdown("""
         color: #065F46 !important;
     }
 
+    /* Multiselect tags */
+    [data-baseweb=tag] {
+        background-color: #EFF6FF !important;
+        color: #1E3A5F !important;
+    }
+    /* Selectbox and multiselect dropdowns */
+    [data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+    }
+    /* Radio button labels */
+    [data-testid="stRadio"] label p {
+        color: #0F172A !important;
+    }
+    /* Dropdown popover options */
+    [data-baseweb="popover"] ul li {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+    }
+    [data-baseweb="popover"] ul li:hover {
+        background-color: #EFF6FF !important;
+    }
+    /* All input backgrounds */
+    input, textarea {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+    }
+
     /* Spinner */
     .stSpinner {
         color: #1E3A5F !important;
